@@ -52,10 +52,9 @@ function Shell() {
       <UpdateBanner />
       <Sidebar />
       <div className="main-panel">
-        {/* detail bar — June style breadcrumb, inside the card */}
         <div className="detail-bar">
-          <span className="truncate">{group ? group.name : bot ? bot.name : "ComplyOS"}</span>
-          {bot && <span className="text-[11px] opacity-60">· {bot.modelSelection.model}</span>}
+          <span className="truncate text-foreground">{group ? group.name : "ComplyOS"}</span>
+          <span className="ml-auto text-[11px] text-muted-foreground">Local-first · POPIA-ready</span>
         </div>
         <div className="main-panel-body">
           {group ? (
@@ -90,10 +89,8 @@ export default function App() {
   const [gated, setGated] = useState(() => !emailGateDone());
   useEffect(() => {
     initAnalytics();
-    // apply stored theme on mount (index.html already did pre-paint)
-    const stored = (localStorage.getItem("complyos:theme") as "light" | "dark" | "system" | null) ?? "system";
-    const resolved = stored === "light" || stored === "dark" ? stored : window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
-    document.documentElement.setAttribute("data-theme", resolved);
+    const stored = localStorage.getItem("complyos:theme") as "light" | "dark" | null;
+    document.documentElement.setAttribute("data-theme", stored === "dark" ? "dark" : "light");
   }, []);
   return (
     <StoreProvider>

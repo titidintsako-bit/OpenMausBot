@@ -8,10 +8,13 @@
     <script>
       (function () {
         try {
-          var stored = localStorage.getItem("complyos:theme") || localStorage.getItem("os-clovy:theme") || "system";
-          var resolved = stored === "light" || stored === "dark" ? stored : window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+          var stored = localStorage.getItem("complyos:theme");
+          // Comply Paper is light-first — default to light unless user explicitly chose dark
+          var resolved = stored === "dark" ? "dark" : "light";
           document.documentElement.setAttribute("data-theme", resolved);
-        } catch (e) {}
+        } catch (e) {
+          document.documentElement.setAttribute("data-theme", "light");
+        }
       })();
     </script>
   </head>

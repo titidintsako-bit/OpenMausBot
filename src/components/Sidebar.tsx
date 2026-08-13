@@ -28,8 +28,6 @@ import { stateForBot } from "@/lib/mascot";
 import { useUpdaterState } from "@/lib/updater";
 import { cn } from "@/lib/cn";
 
-const isElectron = navigator.userAgent.includes("Electron");
-
 /** "Milind Soni" → "MS", "milind" → "M", "you@x.dev" → "Y", unset → "?" */
 function profileInitials(profile?: { name?: string; email?: string }): string {
   const name = profile?.name?.trim();
@@ -486,21 +484,13 @@ export function Sidebar() {
   const visibleGroups = state.groups.filter((g) => !q || g.name.toLowerCase().includes(q));
 
   return (
-    <aside className="flex h-full w-[320px] shrink-0 flex-col border-r border-hairline/40 bg-panel">
-      {/* Titlebar: real traffic lights in Electron, faux ones in the browser */}
-      <div
-        className="flex items-center justify-between px-4 pt-3.5 pb-1"
-        style={{ WebkitAppRegion: "drag" } as React.CSSProperties}
-      >
-        {isElectron ? (
-          <div className="w-14" />
-        ) : (
-          <div className="flex items-center gap-2">
-            <span className="size-3 rounded-full bg-[#ff5f57]" />
-            <span className="size-3 rounded-full bg-[#febc2e]" />
-            <span className="size-3 rounded-full bg-[#28c840]" />
-          </div>
-        )}
+    <aside style={{ width: "var(--sidebar-w)" }} className="flex h-full shrink-0 flex-col border-r border-hairline/40 bg-panel">
+      {/* Brand — replaces macOS dots */}
+      <div className="flex items-center justify-between px-4 pt-3.5 pb-1">
+        <div className="flex items-center gap-2">
+          <span className="text-[15px] font-semibold tracking-tight text-foreground" style={{ fontFamily: "var(--font-serif)" }}>ComplyOS</span>
+          <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-medium tracking-widest text-primary">Local-first</span>
+        </div>
         <div className="relative" style={{ WebkitAppRegion: "no-drag" } as React.CSSProperties}>
           <button
             onClick={() => setPlusOpen((o) => !o)}
