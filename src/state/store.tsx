@@ -152,6 +152,8 @@ interface AppState {
   computerOpen: boolean;
   appSettingsOpen: boolean;
   ragOpen: boolean;
+  consultationOpen: boolean;
+  integrityOpen: boolean;
   /** latest live frame of a bot's computer, per botId */
   screens: Record<string, { png: string; mime: string }>;
   /** bots whose cloud computer is being provisioned */
@@ -203,6 +205,8 @@ type Action =
   | { type: "toggleComputer"; open?: boolean }
   | { type: "toggleAppSettings"; open?: boolean }
   | { type: "toggleRag"; open?: boolean }
+  | { type: "toggleConsultation"; open?: boolean }
+  | { type: "toggleIntegrity"; open?: boolean }
   | {
       type: "updateBot";
       botId: string;
@@ -443,12 +447,22 @@ function reducer(state: AppState, action: Action): AppState {
         settingsOpen: open ? false : state.settingsOpen,
         computerOpen: open ? false : state.computerOpen,
         pluginsOpen: open ? false : state.pluginsOpen,
-        ragOpen: open ? false : state.ragOpen,
+        ragOpen: false,
+        consultationOpen: false,
+        integrityOpen: false,
       };
     }
     case "toggleRag": {
       const open = action.open ?? !state.ragOpen;
-      return { ...state, ragOpen: open, appSettingsOpen: open ? false : state.appSettingsOpen, settingsOpen: false, computerOpen: false, pluginsOpen: false };
+      return { ...state, ragOpen: open, appSettingsOpen: false, settingsOpen: false, computerOpen: false, pluginsOpen: false, consultationOpen: false, integrityOpen: false };
+    }
+    case "toggleConsultation": {
+      const open = action.open ?? !state.consultationOpen;
+      return { ...state, consultationOpen: open, ragOpen: false, appSettingsOpen: false, settingsOpen: false, computerOpen: false, pluginsOpen: false, integrityOpen: false };
+    }
+    case "toggleIntegrity": {
+      const open = action.open ?? !state.integrityOpen;
+      return { ...state, integrityOpen: open, ragOpen: false, appSettingsOpen: false, settingsOpen: false, computerOpen: false, pluginsOpen: false, consultationOpen: false };
     }
     case "updateBot": {
       const mascotChanged =
@@ -532,6 +546,8 @@ const initialState: AppState = {
   computerOpen: false,
   appSettingsOpen: false,
   ragOpen: false,
+  consultationOpen: false,
+  integrityOpen: false,
   screens: {},
   provisioning: {},
   connected: false,

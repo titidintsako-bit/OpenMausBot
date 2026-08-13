@@ -544,11 +544,21 @@ export function Sidebar() {
         </div>
       </div>
 
+      {/* June nav — Comply mapping */}
+      <div className="px-2 pb-2">
+        <button onClick={() => dispatch({ type: "toggleConsultation" })} className={`flex w-full items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-left text-[13px] ${state.consultationOpen ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:bg-accent hover:text-foreground"}`}>
+          <span className="size-1.5 rounded-full bg-success" /> Consultations
+        </button>
+        <button onClick={() => dispatch({ type: "toggleIntegrity" })} className={`mt-1 flex w-full items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-left text-[13px] ${state.integrityOpen ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:bg-accent hover:text-foreground"}`}>
+          <span className="size-1.5 rounded-full bg-primary" /> Integrity
+        </button>
+      </div>
+
       {/* Bot list */}
       <div className="flex-1 overflow-y-auto px-2">
         <div className="flex flex-col gap-0.5">
           {visibleBots.length === 0 && visibleGroups.length === 0 && q && (
-            <div className="px-3 py-6 text-center text-[13px] text-ink-secondary">Nothing matches “{query}”</div>
+            <div className="px-3 py-6 text-center text-[13px] text-muted-foreground">Nothing matches “{query}”</div>
           )}
           {visibleGroups.map((g) => (
             <GroupListItem key={g.id} group={g} onMenu={setRoomMenu} />

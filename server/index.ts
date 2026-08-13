@@ -17,6 +17,7 @@ import { BUILT_IN_DRIVERS } from "./drivers/builtIn.ts";
 import { EventBus } from "./harness/bus.ts";
 import { ProviderRegistry } from "./harness/registry.ts";
 import * as rag from "./rag/index.ts";
+import * as consultations from "./consultations.ts";
 import { mentionedBots, Store, type Message } from "./store.ts";
 
 const PORT = Number(process.env.OMB_PORT || process.env.OGB_PORT || 8799);
@@ -1121,6 +1122,33 @@ const server = createServer(async (req, res) => {
       rag.ragClear(companyId);
       broadcast({ kind: "rag", stats: rag.ragStats(companyId) });
       return json(res, 200, { cleared: true });
+    }
+
+    // ── consultations (Phase 3: MediaRecorder mic-only) ──
+    if (method === "GET" && path === "/api/consultations") {
+      return json(res, 200, { items: consultations.listConsultations() });
+    }
+    if (method === "POST" && path === "/api/consultations") {
+      const body = await readBody(req).catch(() => ({} as Record<string, unknown>));
+      const title = typeof body.title === "string" ? body.title.trim() : undefined;
+      const c = consultations.createConsultation(title);
+      return json(res, 201, { item: c });
+    }
+    m = path.match(/^\/api\/consultations\/([\w_]+)$/);
+    if (m && method === "GET") {
+      const c = consultations.getConsultation(m[1]);
+      if (!c) return json(res, 404, { error: "not found" });
+      return json(res, 200, { item: c });
+    }
+    m = path.match(/^\/api\/consultations\/([\w_]+)\/transcript$/);
+    if (m && method === "PUT") {
+      const body = await readBody(req);
+      const transcript = String(body.transcript ?? "");
+      if (!transcript.trim()) return json(res, 400, { error: "transcript required" });
+      const c = await consultations.transcribeAndIndex(m[1], transcript);
+      if (!c) return json(res, 404, { error: "not found" });
+      broadcast({ kind: "consultation", item: c });
+      return json(res, 200, { item: c });
     }
 
     // ── the bot's cloud computer (Box) ──

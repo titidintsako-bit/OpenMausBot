@@ -16,6 +16,8 @@ import { ModelPicker } from "@/components/ModelPicker";
 import { MausAvatar } from "@/components/Avatar";
 import { stateForBot } from "@/lib/mascot";
 import { cn } from "@/lib/cn";
+import { ConsultationView } from "@/components/ConsultationView";
+import { IntegrityView } from "@/components/IntegrityView";
 
 function Shell() {
   const { state, dispatch } = useStore();
@@ -96,16 +98,18 @@ function Shell() {
           {isWin && <span className="w-[88px] shrink-0" aria-hidden />}
         </div>
         <div className="main-panel-body">
-          {group ? (
+          {state.consultationOpen ? (
+            <ConsultationView />
+          ) : state.integrityOpen ? (
+            <IntegrityView />
+          ) : group ? (
             <GroupView key={group.id} group={group} />
           ) : bot ? (
             <ChatView bot={bot} />
           ) : (
             <main className="flex h-full min-w-0 flex-1 flex-col items-center justify-center gap-3 p-8 text-muted-foreground">
               <Loader2 size={20} className="animate-spin" />
-              <div className="text-[14px]">
-                {state.connected ? "No bots yet" : "Connecting to the bot server…"}
-              </div>
+              <div className="text-[14px]">{state.connected ? "No bots yet" : "Connecting to the bot server…"}</div>
               {!state.connected && (
                 <div className="text-[12px]">
                   Start it with <code className="rounded bg-muted px-1.5 py-0.5">pnpm dev:server</code>
