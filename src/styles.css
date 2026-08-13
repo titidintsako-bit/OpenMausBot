@@ -54,7 +54,8 @@ body {
 }
 ::selection { background: var(--selection); color: var(--selection-foreground); }
 
-/* ── ComplyOS shell — June's inset card pattern (app.css:112) */
+/* Warm Xenova at boot happens in server/index.ts — first query < 4s after */
+  /* ── ComplyOS shell — June's inset card pattern (app.css:112) */
 .app-shell {
   display: grid;
   grid-template-columns: var(--sidebar-w-current, var(--sidebar-w)) minmax(0, 1fr);
@@ -111,16 +112,12 @@ body {
   color: var(--muted-foreground);
 }
 
-::-webkit-scrollbar {
-  width: 8px;
-}
-::-webkit-scrollbar-thumb {
-  background: #3d3d3d;
-  border-radius: 4px;
-}
-::-webkit-scrollbar-track {
-  background: transparent;
-}
+* { scrollbar-width: thin; scrollbar-color: color-mix(in oklch, var(--muted-foreground) 30%, transparent) transparent; }
+::-webkit-scrollbar { width: var(--scrollbar-w); height: var(--scrollbar-w); }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: transparent; border-radius: 9999px; }
+*:hover::-webkit-scrollbar-thumb, *:focus-within::-webkit-scrollbar-thumb { background: color-mix(in oklch, var(--muted-foreground) 30%, transparent); }
+::-webkit-scrollbar-thumb:hover { background: color-mix(in oklch, var(--muted-foreground) 55%, transparent); }
 
 @keyframes panel-in {
   from { transform: translateX(28px); opacity: 0; }
@@ -146,7 +143,7 @@ body {
   to { background-position: -200% 50%; }
 }
 .thinking-shimmer {
-  background: linear-gradient(90deg, var(--color-ink-secondary) 40%, var(--color-ink) 50%, var(--color-ink-secondary) 60%);
+  background: linear-gradient(90deg, currentColor 40%, var(--foreground) 50%, currentColor 60%);
   background-size: 200% 100%;
   -webkit-background-clip: text;
   background-clip: text;

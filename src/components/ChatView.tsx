@@ -9,20 +9,16 @@ import {
   ChevronRight,
   Copy,
   Loader2,
-  Monitor,
   Pencil,
   RefreshCw,
-  Square,
   X,
 } from "lucide-react";
 import { useStore, useStreaming, formatTime, messageVersions, visibleMessages, type Bot, type Message } from "@/state/store";
 import { MausAvatar } from "./Avatar";
-import { stateForBot } from "@/lib/mascot";
 import { ChatMarkdown } from "./ChatMarkdown";
 import { OptionCard } from "./OptionCard";
 import { Composer } from "./Composer";
 import { EmptyState } from "./EmptyState";
-import { ModelPicker } from "./ModelPicker";
 import { ReactionBar, ReactionChips } from "./Reactions";
 import { cn } from "@/lib/cn";
 
@@ -532,7 +528,6 @@ export function ChatView({ bot }: { bot: Bot }) {
   const streaming = stream.streaming[bot.threadId];
   const reasoning = stream.reasoning[bot.threadId];
   const provisioning = state.provisioning[bot.id];
-  const mascotMotion = state.mascotMotion?.botId === bot.id ? state.mascotMotion : null;
 
   // only the active branch is rendered; forks stay reachable via ‹ › nav
   const messages = useMemo(() => visibleMessages(bot), [bot]);
@@ -598,66 +593,18 @@ export function ChatView({ bot }: { bot: Bot }) {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
   };
 
-  // on Windows the frameless window's min/max/close overlay sits at the
-  // top-right: the header becomes the drag strip and clears room for it
-  const isWin = window.ogb?.platform === "win32";
-  const drag = isWin ? ({ WebkitAppRegion: "drag" } as React.CSSProperties) : undefined;
-  const noDrag = isWin ? ({ WebkitAppRegion: "no-drag" } as React.CSSProperties) : undefined;
-
   return (
     <main className="relative flex h-full min-w-0 flex-1 flex-col bg-card">
-      {/* Header — June's detail-bar lives in App shell, this is the bot meta row */}
-      <div className={cn("flex items-center justify-between border-b border-border-subtle px-5 py-2.5", isWin && "pr-[148px]")} style={drag}>
-        <button
-          onClick={() => dispatch({ type: "toggleSettings" })}
-          className="flex items-center gap-2.5 rounded-full border border-border bg-card px-2 py-1 pr-3 hover:bg-accent"
-          title="Bot settings"
-          style={noDrag}
-        >
-          <MausAvatar
-            color={bot.color}
-            state={stateForBot({ ...bot, messages })}
-            size={22}
-            motion={mascotMotion?.kind ?? "none"}
-            motionKey={mascotMotion?.nonce ?? 0}
-          />
-          <span className="text-[13px] font-medium text-foreground">{bot.name}</span>
-          {bot.busy && <Loader2 size={12} className="animate-spin text-muted-foreground" />}
-        </button>
-        <div className="flex items-center gap-1.5" style={noDrag}>
-          {bot.busy && (
-            <button
-              onClick={() => dispatch({ type: "interrupt", botId: bot.id })}
-              className="flex items-center gap-1 rounded-full border border-border bg-card px-2.5 py-1 text-[12px] text-muted-foreground hover:bg-accent"
-              title="Stop this turn"
-            >
-              <Square size={11} className="fill-current" />
-              Stop
-            </button>
-          )}
-          <ModelPicker bot={bot} />
-          <button
-            onClick={() => dispatch({ type: "toggleComputer" })}
-            className={cn("rounded-md p-1.5 hover:bg-accent", state.computerOpen ? "text-primary" : "text-muted-foreground hover:text-foreground")}
-            title="Bot's computer"
-          >
-            <Monitor size={16} />
-          </button>
-        </div>
-      </div>
 
-      {/* Error banner */}
       {state.error && (
-        <div className="mx-auto w-full max-w-[900px] px-5">
-          <div className="mb-2 rounded-lg border border-danger/30 bg-danger/10 px-3 py-2 text-[13px] text-danger">
-            {state.error}
-          </div>
+        <div className="mx-auto w-full max-w-[680px] px-5">
+          <div className="mb-2 rounded-lg border border-danger/30 bg-danger/10 px-3 py-2 text-[13px] text-danger">{state.error}</div>
         </div>
       )}
 
       {/* Messages — hero when empty, otherwise thread */}
       {messages.length === 0 && !bot.busy && !streaming && !reasoning ? (
-        <EmptyState botName={bot.name} onPrompt={(t) => dispatch({ type: "send", botId: bot.id, text: t })} />
+        <EmptyState bot={bot} />
       ) : (
         <div
           ref={scrollRef}
@@ -676,7 +623,7 @@ export function ChatView({ bot }: { bot: Bot }) {
             if (!follow && atEnd()) setFollow(true);
           }}
         >
-          <div className="mx-auto flex max-w-[900px] flex-col gap-3 pb-4 pt-4" role="log" aria-live="polite" aria-label={`Conversation with ${bot.name}`}>
+          <div className="mx-auto flex max-w-[680px] flex-col gap-3 pb-4 pt-4" role="log" aria-live="polite" aria-label={`Conversation with ${bot.name}`}>
             <MessagesList
               bot={bot}
               messages={messages}

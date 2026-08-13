@@ -113,6 +113,8 @@ let bootSelection = { instanceId: "claude", model: "claude-sonnet-5" };
 const store = new Store(() => bootSelection);
 bootSelection = await defaultSelection();
 store.seedIfEmpty();
+// warm Xenova so first user query doesn't pay 4s download; hash fallback covers offline
+void rag.ragQuery("warmup", rag.DEFAULT_COMPANY, 1).catch(() => {});
 
 // ── SSE fan-out to clients ─────────────────────────────────────────────
 const sseClients = new Set<ServerResponse>();
@@ -364,7 +366,7 @@ async function startTurn(
       : text;
 
   const persona = [
-    `You are ${bot.name}, a personal bot in OpenMausBot.`,
+    `You are ${bot.name}, a ComplyOS assistant — local-first, POPIA-aware, citation-first.`,
     bot.title && `Role: ${bot.title}.`,
     bot.description && `About: ${bot.description}`,
   ]

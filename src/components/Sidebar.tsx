@@ -7,7 +7,6 @@ import {
   Check,
   ClipboardCopy,
   Copy,
-  Database,
   EyeOff,
   FolderPlus,
   Loader2,
@@ -137,18 +136,18 @@ function StackedMauses({ members }: { members: Bot[] }) {
   if (members.length <= 1) {
     const b = members[0];
     return (
-      <div className="flex size-14 shrink-0 items-center justify-center">
-        {b ? <MausAvatar color={b.color} state="happy" size={56} /> : <Users size={24} className="text-ink-secondary" />}
+      <div className="flex size-10 shrink-0 items-center justify-center">
+        {b ? <MausAvatar color={b.color} state="happy" size={32} /> : <Users size={20} className="text-muted-foreground" />}
       </div>
     );
   }
   const shown = members.slice(0, 3);
   const extra = members.length - shown.length;
   return (
-    <div className="flex size-14 shrink-0 items-center justify-center">
-      <div className="flex items-center -space-x-3">
+    <div className="flex size-10 shrink-0 items-center justify-center">
+      <div className="flex items-center -space-x-2">
         {shown.map((b) => (
-          <MausAvatar key={b.id} color={b.color} state="happy" size={30} />
+          <MausAvatar key={b.id} color={b.color} state="happy" size={24} />
         ))}
         {extra > 0 && (
           <span className="z-10 flex size-[22px] items-center justify-center rounded-full border border-hairline/40 bg-raised text-[10px] font-medium text-ink-secondary">
@@ -433,7 +432,7 @@ function BotListItem({ bot, onMenu }: { bot: Bot; onMenu: (menu: MenuState) => v
       <MausAvatar
         color={bot.color}
         state={stateForBot({ ...bot, messages: visible })}
-        size={56}
+        size={32}
         motion={mascotMotion?.kind ?? "none"}
         motionKey={mascotMotion?.nonce ?? 0}
       />
@@ -563,20 +562,11 @@ export function Sidebar() {
       {/* Footer */}
       <div className="px-3 pb-3 pt-2">
         <button
-          onClick={() => dispatch({ type: "toggleRag", open: true })}
-          className="flex w-full items-center gap-3 rounded-xl px-3 py-2 text-left hover:bg-accent"
-          title="Company files — indexed locally, agents cite them automatically"
-        >
-          <Database size={18} className="text-muted-foreground" />
-          <span className="text-[13px] text-foreground">Company files</span>
-          <span className="ml-auto text-[11px] text-muted-foreground">{/* auto-RAG badge hidden — ingestion is admin */}</span>
-        </button>
-        <button
           onClick={() => dispatch({ type: "togglePlugins", open: true })}
-          className="flex w-full items-center gap-3 rounded-xl px-3 py-2 text-left hover:bg-raised/50"
+          className="flex w-full items-center gap-3 rounded-xl px-3 py-2 text-left hover:bg-accent"
         >
-          <Puzzle size={20} className="text-ink-secondary" />
-          <span className="text-[14px] text-ink">Plugins</span>
+          <Puzzle size={18} className="text-muted-foreground" />
+          <span className="text-[13px] text-foreground">Plugins</span>
         </button>
         <div className="flex items-center">
           <button

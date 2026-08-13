@@ -86,7 +86,11 @@ function CodeBlock({ code, lang, streaming }: { code: string; lang: string; stre
   );
 }
 
+function cite(text: string) {
+  return text.replace(/\(([^)]+\.(txt|pdf|md|docx|xlsx))\)/gi, "[$1](#citation)");
+}
 function ChatMarkdownComponent({ text, streaming = false }: { text: string; streaming?: boolean }) {
+  const cited = cite(text);
   return (
     <div className="chat-md min-w-0 [&>*+*]:mt-2">
       <Markdown
@@ -120,13 +124,11 @@ function ChatMarkdownComponent({ text, streaming = false }: { text: string; stre
             );
           },
           a({ href, children }: { href?: string; children?: ReactNode }) {
+            if (href === "#citation") {
+              return <span className="inline-flex items-center rounded-full border border-brand-line bg-brand-tint px-2 py-0.5 text-[11px] font-medium text-foreground">{children}</span>;
+            }
             return (
-              <a
-                href={href}
-                target="_blank"
-                rel="noreferrer"
-                className="break-words text-accent underline decoration-accent/40 hover:decoration-accent"
-              >
+              <a href={href} target="_blank" rel="noreferrer" className="break-words text-accent underline decoration-accent/40 hover:decoration-accent">
                 {children}
               </a>
             );
@@ -180,7 +182,7 @@ function ChatMarkdownComponent({ text, streaming = false }: { text: string; stre
           },
         }}
       >
-        {text}
+        {cited}
       </Markdown>
     </div>
   );

@@ -1,7 +1,7 @@
 // App-level settings, in the right-side slot: who you are + credentials
 // shared by all bots. Per-bot settings (name, persona, model, computer)
 // live in SettingsPanel; contextual Box-token entry stays in ComputerPanel.
-import { X } from "lucide-react";
+import { Database, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useStore } from "@/state/store";
 import { ApiKeyRow } from "./ApiKeys";
@@ -126,18 +126,24 @@ export function AppSettingsPanel() {
         <div className="mt-4 rounded-xl bg-card p-4">
           <div className="text-[15px] font-medium text-ink">Connections</div>
           <div className="mt-0.5 text-[13px] text-ink-secondary">
-            Shared by all bots. Saving a key reloads providers instantly; keys are stored locally and never
-            shown again.
+            Shared by all bots. Saving a key reloads providers instantly; keys are stored locally and never shown again.
           </div>
           <div className="mt-4 flex flex-col gap-4">
             <ApiKeyRow section="composio" label="Composio Connect key" placeholder="ck_…" />
-            <ApiKeyRow
-              section="composioApi"
-              label="Composio API key (optional)"
-              placeholder="ak_…  unlocks the full app catalog"
-            />
+            <ApiKeyRow section="composioApi" label="Composio API key (optional)" placeholder="ak_…  unlocks the full app catalog" />
             <ApiKeyRow section="box" label="Box token" placeholder="Token from box.ascii.dev" />
           </div>
+        </div>
+
+        <div className="mt-4 rounded-xl bg-card p-4">
+          <div className="flex items-center gap-2 text-[15px] font-medium text-ink">
+            <Database size={16} className="text-muted-foreground" />
+            Company files
+          </div>
+          <div className="mt-0.5 text-[13px] text-ink-secondary">Indexed locally. Agents cite them automatically — no need to @ them.</div>
+          <button onClick={() => dispatch({ type: "toggleRag", open: true })} className="mt-3 w-full rounded-lg border border-border bg-card px-3 py-2 text-[13px] font-medium text-foreground hover:bg-accent">
+            Open knowledge
+          </button>
         </div>
 
         <UpdatesRow />

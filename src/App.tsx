@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Loader2 } from "lucide-react";
+import { Loader2, Monitor, Square } from "lucide-react";
 import { StoreProvider, useStore } from "@/state/store";
 import { Onboarding } from "@/components/Onboarding";
 import { emailGateDone, initAnalytics } from "@/lib/analytics";
@@ -12,6 +12,10 @@ import { ComputerPanel } from "@/components/ComputerPanel";
 import { AppSettingsPanel } from "@/components/AppSettingsPanel";
 import { RagPanel } from "@/components/RagPanel";
 import { UpdateBanner } from "@/components/UpdateBanner";
+import { ModelPicker } from "@/components/ModelPicker";
+import { MausAvatar } from "@/components/Avatar";
+import { stateForBot } from "@/lib/mascot";
+import { cn } from "@/lib/cn";
 
 function Shell() {
   const { state, dispatch } = useStore();
@@ -47,14 +51,49 @@ function Shell() {
     return () => window.removeEventListener("keydown", onKey);
   }, [state.bots, state.selectedId, dispatch]);
 
+  const isWin = (window as unknown as { ogb?: { platform?: string } }).ogb?.platform === "win32";
+  const drag = isWin ? ({ WebkitAppRegion: "drag" } as React.CSSProperties) : undefined;
+  const noDrag = isWin ? ({ WebkitAppRegion: "no-drag" } as React.CSSProperties) : undefined;
+  const mascotMotion = bot ? (state.mascotMotion?.botId === bot.id ? state.mascotMotion : null) : null;
+
   return (
     <div className="app-shell">
       <UpdateBanner />
       <Sidebar />
       <div className="main-panel">
-        <div className="detail-bar">
-          <span className="truncate text-foreground">{group ? group.name : "ComplyOS"}</span>
-          <span className="ml-auto text-[11px] text-muted-foreground">Local-first · POPIA-ready</span>
+        <div className="detail-bar" style={drag}>
+          {bot ? (
+            <>
+              <button onClick={() => dispatch({ type: "toggleSettings" })} className="flex items-center gap-2 rounded-full border border-border bg-card px-2 py-1 pr-3 hover:bg-accent" style={noDrag}>
+                <MausAvatar color={bot.color} state={stateForBot({ ...bot, messages: bot.messages })} size={18} motion={mascotMotion?.kind ?? "none"} motionKey={mascotMotion?.nonce ?? 0} />
+                <span className="text-[13px] font-medium text-foreground">{bot.name}</span>
+                {bot.busy && <Loader2 size={12} className="animate-spin text-muted-foreground" />}
+              </button>
+              <div className="ml-auto flex items-center gap-1.5" style={noDrag}>
+                {bot.busy && (
+                  <button onClick={() => dispatch({ type: "interrupt", botId: bot.id })} className="flex items-center gap-1 rounded-full border border-border bg-card px-2.5 py-1 text-[12px] text-muted-foreground hover:bg-accent">
+                    <Square size={11} className="fill-current" />
+                    Stop
+                  </button>
+                )}
+                <ModelPicker bot={bot} />
+                <button onClick={() => dispatch({ type: "toggleComputer" })} className={cn("rounded-md p-1.5 hover:bg-accent", state.computerOpen ? "text-primary" : "text-muted-foreground hover:text-foreground")} title="Bot's computer">
+                  <Monitor size={16} />
+                </button>
+              </div>
+            </>
+          ) : group ? (
+            <>
+              <span className="truncate text-foreground">{group.name}</span>
+              <span className="ml-auto text-[11px] text-muted-foreground">Room · {group.memberIds.length} bots</span>
+            </>
+          ) : (
+            <>
+              <span className="truncate text-foreground">ComplyOS</span>
+              <span className="ml-auto text-[11px] text-muted-foreground">Local-first · POPIA-ready</span>
+            </>
+          )}
+          {isWin && <span className="w-[88px] shrink-0" aria-hidden />}
         </div>
         <div className="main-panel-body">
           {group ? (

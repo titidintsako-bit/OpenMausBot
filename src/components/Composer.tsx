@@ -147,6 +147,7 @@ export function Composer({
     };
   }, [recording]);
 
+  const canDictate = typeof window !== "undefined" && !!window.ogb?.onSpeechTranscript;
   const toggleMic = () => {
     if (!window.ogb) {
       setSpeechError("Voice input is available in the desktop app.");
@@ -273,15 +274,13 @@ export function Composer({
             <Square size={14} className="fill-current" />
           </button>
         )}
-        {!busy && !text.trim() && (
+        {!busy && !text.trim() && canDictate && (
           <button
             onClick={toggleMic}
             aria-label={recording ? "Stop dictation" : "Start dictation"}
             className={cn(
               "flex size-8 shrink-0 items-center justify-center rounded-full",
-              recording
-                ? "animate-pulse bg-danger/20 text-danger"
-                : "text-ink-secondary hover:bg-raised hover:text-ink",
+              recording ? "animate-pulse bg-danger/20 text-danger" : "text-muted-foreground hover:bg-accent hover:text-foreground",
             )}
             title={recording ? "Stop dictation (Esc)" : "Dictate"}
           >

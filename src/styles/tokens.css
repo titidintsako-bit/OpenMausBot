@@ -64,6 +64,12 @@
   --r-pill: 999px;
   --r-window: 10px;
 
+  --detail-bar-h: 46px;
+  --scrollbar-w: 8px;
+  --resize-grabber-h: 200px;
+  --line-width: 1px;
+  --focus-outline-width: 3px;
+
   --control-xs: 22px;
   --control-sm: 26px;
   --control-md: 28px;
@@ -95,6 +101,7 @@
   --accent-foreground: oklch(22% 0.01 85);
   --border: color-mix(in oklch, oklch(88% 0.01 85), var(--brand-wash) 6%);
   --border-subtle: color-mix(in oklch, var(--border) 55%, transparent);
+  --detail-bar-border: color-mix(in oklch, var(--border-subtle) 58%, transparent);
   --input: var(--border);
   --ring: oklch(75% 0.02 85);
   --ring-focus: color-mix(in oklch, var(--foreground) 18%, transparent);
