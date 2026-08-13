@@ -3,6 +3,7 @@
 import type { AnyProviderDriver } from "../contracts.ts";
 import { AntigravityDriver } from "./antigravity.ts";
 import { BoxAgentDriver } from "./boxagent.ts";
+import { BrowserUseDriver } from "./browser-use/index.ts";
 import { ClaudeDriver } from "./claude.ts";
 import { CodexDriver } from "./codex.ts";
 import { GrokDriver } from "./grok.ts";
@@ -17,4 +18,5 @@ export const BUILT_IN_DRIVERS: readonly AnyProviderDriver[] = [
   CodexDriver,
   AntigravityDriver,
   BoxAgentDriver,
+  BrowserUseDriver,
 ];

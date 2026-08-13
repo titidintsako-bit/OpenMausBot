@@ -19,6 +19,7 @@ import { ProviderRegistry } from "./harness/registry.ts";
 import * as rag from "./rag/index.ts";
 import * as consultations from "./consultations.ts";
 import { mentionedBots, Store, type Message } from "./store.ts";
+import { BrowserUseDriver } from "./drivers/browser-use/index.ts";
 
 const PORT = Number(process.env.OMB_PORT || process.env.OGB_PORT || 8799);
 const STATIC_DIR = process.env.OMB_STATIC_DIR || null;
@@ -1173,6 +1174,41 @@ const server = createServer(async (req, res) => {
         case "screenshot":
           return json(res, 200, await box.screenshotBox(cfg, botId));
       }
+    }
+
+    // ── browser-use (Phase 5: ComplyOS browser automation) ────────────────────
+    m = path.match(/^\/api\/browser\/navigate$/);
+    if (m && method === "POST") {
+      const body = await readBody(req);
+      const url = String(body.url ?? "");
+      const driver = BrowserUseDriver as any;
+      return json(res, 200, driver.navigate(url));
+    }
+    m = path.match(/^\/api\/browser\/click$/);
+    if (m && method === "POST") {
+      const body = await readBody(req);
+      const selector = String(body.selector ?? "");
+      const driver = BrowserUseDriver as any;
+      return json(res, 200, driver.click(selector));
+    }
+    m = path.match(/^\/api\/browser\/type$/);
+    if (m && method === "POST") {
+      const body = await readBody(req);
+      const selector = String(body.selector ?? "");
+      const text = String(body.text ?? "");
+      const driver = BrowserUseDriver as any;
+      return json(res, 200, driver.type(selector, text));
+    }
+    m = path.match(/^\/api\/browser\/screenshot$/);
+    if (m && method === "GET") {
+      const driver = BrowserUseDriver as any;
+      return json(res, 200, driver.screenshot());
+    }
+    m = path.match(/^\/api\/browser\/allowed-portal$/);
+    if (m && method === "GET") {
+      const domain = String((new URL(req.url ?? "")).searchParams.get("domain") ?? "");
+      const allowed = (BrowserUseDriver as any).allowedPortal(domain);
+      return json(res, 200, { allowed });
     }
 
     // packaged app: the server serves the built UI too (window → :8799 for
