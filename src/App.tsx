@@ -10,6 +10,7 @@ import { SettingsPanel } from "@/components/SettingsPanel";
 import { PluginsPanel } from "@/components/PluginsPanel";
 import { ComputerPanel } from "@/components/ComputerPanel";
 import { AppSettingsPanel } from "@/components/AppSettingsPanel";
+import { RagPanel } from "@/components/RagPanel";
 import { UpdateBanner } from "@/components/UpdateBanner";
 
 function Shell() {
@@ -73,6 +74,7 @@ function Shell() {
       {state.computerOpen && bot && <ComputerPanel bot={bot} />}
       {state.appSettingsOpen && <AppSettingsPanel />}
       {state.pluginsOpen && <PluginsPanel />}
+      {state.ragOpen && <RagPanel onClose={() => dispatch({ type: "toggleRag", open: false })} />}
       </div>
     </div>
   );

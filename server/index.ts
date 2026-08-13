@@ -16,6 +16,7 @@ import type { RuntimeEvent } from "./contracts.ts";
 import { BUILT_IN_DRIVERS } from "./drivers/builtIn.ts";
 import { EventBus } from "./harness/bus.ts";
 import { ProviderRegistry } from "./harness/registry.ts";
+import * as rag from "./rag/index.ts";
 import { mentionedBots, Store, type Message } from "./store.ts";
 
 const PORT = Number(process.env.OMB_PORT || process.env.OGB_PORT || 8799);
@@ -370,6 +371,18 @@ async function startTurn(
     .filter(Boolean)
     .join(" ");
 
+  // RAG: enrich with citations from local knowledge base (non-blocking, 4s timeout)
+  let ragBlock = "";
+  try {
+    const hits = await Promise.race([
+      rag.ragQuery(text, rag.DEFAULT_COMPANY, 4),
+      new Promise<never>((_, rej) => setTimeout(() => rej(new Error("rag-timeout")), 4000)),
+    ] as const).catch(() => [] as Awaited<ReturnType<typeof rag.ragQuery>>);
+    if (hits.length) {
+      ragBlock = "\n\n[Retrieved context — cite sources when you use them:]\n" + hits.map((h, i) => `[${i + 1}] ${h.source}: ${h.text.slice(0, 700)}`).join("\n\n");
+    }
+  } catch {}
+
   // busy flips immediately so the composer locks; the dispatch itself runs
   // in the background — box provisioning can take ~90s and must never
   // hang the HTTP request
@@ -431,6 +444,7 @@ async function startTurn(
         transcript,
         system:
           persona +
+          ragBlock +
           (integrations.computer && instance.driverKind !== "boxAgent"
             ? " You have your own cloud computer — use the computer tools (screenshot, computer_exec, open_url) whenever browsing or acting on a desktop helps."
             : integrations.localComputer
@@ -443,7 +457,8 @@ async function startTurn(
             ? ` The user tagged ${tagged
                 .map((t) => `@${t.name} (ask_bot bot_id ${t.id})`)
                 .join(" and ")} in their message — bring them in with ask_bot and fold their reply into your answer.`
-            : ""),
+            : "") +
+          (ragBlock ? " When you use retrieved context, cite the source file in parentheses." : ""),
         integrations,
       });
       // dispatched: the rewind is spent, and the old cursors are dead
@@ -1052,6 +1067,59 @@ const server = createServer(async (req, res) => {
     if (m && method === "POST") return json(res, 200, await composio.authorizeService(cfg, m[1]));
     m = path.match(/^\/api\/connectors\/([\w-]+)$/);
     if (m && method === "DELETE") return json(res, 200, await composio.removeService(cfg, m[1]));
+
+    // ── RAG (local-first knowledge base) ──
+    if (method === "GET" && path === "/api/rag/stats") {
+      const companyId = String(url.searchParams.get("companyId") ?? rag.DEFAULT_COMPANY);
+      return json(res, 200, rag.ragStats(companyId));
+    }
+    if (method === "GET" && path === "/api/rag/list") {
+      const companyId = String(url.searchParams.get("companyId") ?? rag.DEFAULT_COMPANY);
+      return json(res, 200, { items: rag.ragList(companyId) });
+    }
+    if (method === "POST" && path === "/api/rag/query") {
+      const body = await readBody(req);
+      const q = String(body.query ?? body.q ?? "");
+      if (!q.trim()) return json(res, 400, { error: "query required" });
+      const companyId = String(body.companyId ?? rag.DEFAULT_COMPANY);
+      const topK = Math.min(12, Math.max(1, Number(body.topK ?? 5)));
+      const hits = await rag.ragQuery(q, companyId, topK);
+      return json(res, 200, { hits });
+    }
+    if (method === "POST" && path === "/api/rag/ingest-text") {
+      const body = await readBody(req);
+      const text = String(body.text ?? "");
+      const source = String(body.source ?? "pasted-text.txt");
+      if (!text.trim()) return json(res, 400, { error: "text required" });
+      const companyId = String(body.companyId ?? rag.DEFAULT_COMPANY);
+      const r = await rag.ingestText(text, source, companyId);
+      broadcast({ kind: "rag", stats: rag.ragStats(companyId) });
+      return json(res, 200, r);
+    }
+    if (method === "POST" && path === "/api/rag/ingest-file") {
+      const body = await readBody(req);
+      const filePath = String(body.path ?? body.filePath ?? "");
+      if (!filePath.trim()) return json(res, 400, { error: "path required" });
+      const companyId = String(body.companyId ?? rag.DEFAULT_COMPANY);
+      const r = await rag.ingestFile(filePath, companyId);
+      broadcast({ kind: "rag", stats: rag.ragStats(companyId) });
+      return json(res, 200, r);
+    }
+    if (method === "POST" && path === "/api/rag/ingest-folder") {
+      const body = await readBody(req);
+      const folderPath = String(body.path ?? body.folderPath ?? "");
+      if (!folderPath.trim()) return json(res, 400, { error: "path required" });
+      const companyId = String(body.companyId ?? rag.DEFAULT_COMPANY);
+      const r = await rag.ingestFolder(folderPath, companyId);
+      broadcast({ kind: "rag", stats: rag.ragStats(companyId) });
+      return json(res, 200, r);
+    }
+    if (method === "DELETE" && path === "/api/rag/clear") {
+      const companyId = String(url.searchParams.get("companyId") ?? rag.DEFAULT_COMPANY);
+      rag.ragClear(companyId);
+      broadcast({ kind: "rag", stats: rag.ragStats(companyId) });
+      return json(res, 200, { cleared: true });
+    }
 
     // ── the bot's cloud computer (Box) ──
     m = path.match(/^\/api\/bots\/([\w-]+)\/computer$/);

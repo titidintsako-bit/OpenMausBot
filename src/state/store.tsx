@@ -151,6 +151,7 @@ interface AppState {
   pluginsOpen: boolean;
   computerOpen: boolean;
   appSettingsOpen: boolean;
+  ragOpen: boolean;
   /** latest live frame of a bot's computer, per botId */
   screens: Record<string, { png: string; mime: string }>;
   /** bots whose cloud computer is being provisioned */
@@ -201,6 +202,7 @@ type Action =
   | { type: "togglePlugins"; open?: boolean }
   | { type: "toggleComputer"; open?: boolean }
   | { type: "toggleAppSettings"; open?: boolean }
+  | { type: "toggleRag"; open?: boolean }
   | {
       type: "updateBot";
       botId: string;
@@ -441,7 +443,12 @@ function reducer(state: AppState, action: Action): AppState {
         settingsOpen: open ? false : state.settingsOpen,
         computerOpen: open ? false : state.computerOpen,
         pluginsOpen: open ? false : state.pluginsOpen,
+        ragOpen: open ? false : state.ragOpen,
       };
+    }
+    case "toggleRag": {
+      const open = action.open ?? !state.ragOpen;
+      return { ...state, ragOpen: open, appSettingsOpen: open ? false : state.appSettingsOpen, settingsOpen: false, computerOpen: false, pluginsOpen: false };
     }
     case "updateBot": {
       const mascotChanged =
@@ -524,6 +531,7 @@ const initialState: AppState = {
   pluginsOpen: false,
   computerOpen: false,
   appSettingsOpen: false,
+  ragOpen: false,
   screens: {},
   provisioning: {},
   connected: false,
