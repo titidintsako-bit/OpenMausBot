@@ -48,34 +48,40 @@ function Shell() {
   }, [state.bots, state.selectedId, dispatch]);
 
   return (
-    <div className="flex h-full flex-col">
-      {/* fixed-position popup, bottom-left — outside the layout flow */}
+    <div className="app-shell">
       <UpdateBanner />
-      <div className="relative flex min-h-0 flex-1">
       <Sidebar />
-      {group ? (
-        <GroupView key={group.id} group={group} />
-      ) : bot ? (
-        <ChatView bot={bot} />
-      ) : (
-        <main className="flex h-full min-w-0 flex-1 flex-col items-center justify-center gap-3 bg-app text-ink-secondary">
-          <Loader2 size={20} className="animate-spin" />
-          <div className="text-[14px]">
-            {state.connected ? "No bots yet" : "Connecting to the bot server…"}
-          </div>
-          {!state.connected && (
-            <div className="text-[12px]">
-              Start it with <code className="rounded bg-raised px-1.5 py-0.5">pnpm dev:server</code>
-            </div>
+      <div className="main-panel">
+        {/* detail bar — June style breadcrumb, inside the card */}
+        <div className="detail-bar">
+          <span className="truncate">{group ? group.name : bot ? bot.name : "ComplyOS"}</span>
+          {bot && <span className="text-[11px] opacity-60">· {bot.modelSelection.model}</span>}
+        </div>
+        <div className="main-panel-body">
+          {group ? (
+            <GroupView key={group.id} group={group} />
+          ) : bot ? (
+            <ChatView bot={bot} />
+          ) : (
+            <main className="flex h-full min-w-0 flex-1 flex-col items-center justify-center gap-3 p-8 text-muted-foreground">
+              <Loader2 size={20} className="animate-spin" />
+              <div className="text-[14px]">
+                {state.connected ? "No bots yet" : "Connecting to the bot server…"}
+              </div>
+              {!state.connected && (
+                <div className="text-[12px]">
+                  Start it with <code className="rounded bg-muted px-1.5 py-0.5">pnpm dev:server</code>
+                </div>
+              )}
+            </main>
           )}
-        </main>
-      )}
+        </div>
+      </div>
       {state.settingsOpen && bot && <SettingsPanel bot={bot} />}
       {state.computerOpen && bot && <ComputerPanel bot={bot} />}
       {state.appSettingsOpen && <AppSettingsPanel />}
       {state.pluginsOpen && <PluginsPanel />}
       {state.ragOpen && <RagPanel onClose={() => dispatch({ type: "toggleRag", open: false })} />}
-      </div>
     </div>
   );
 }
@@ -84,6 +90,10 @@ export default function App() {
   const [gated, setGated] = useState(() => !emailGateDone());
   useEffect(() => {
     initAnalytics();
+    // apply stored theme on mount (index.html already did pre-paint)
+    const stored = (localStorage.getItem("complyos:theme") as "light" | "dark" | "system" | null) ?? "system";
+    const resolved = stored === "light" || stored === "dark" ? stored : window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+    document.documentElement.setAttribute("data-theme", resolved);
   }, []);
   return (
     <StoreProvider>

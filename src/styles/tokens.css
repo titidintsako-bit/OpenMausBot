@@ -1,0 +1,170 @@
+/*
+ * ComplyOS design tokens — adapted from os-clovy src/styles/tokens.css
+ * "Comply Paper" theme: warm paper + sage compliance accent, light-first.
+ * See spec/design-tokens.md — use these vars, no raw hex.
+ */
+
+@property --sidebar-w-current {
+  syntax: "<length>";
+  inherits: true;
+  initial-value: 280px;
+}
+@property --brand {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: #3f812f;
+}
+@property --brand-wash {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: #5a7c56;
+}
+@property --fs-2xs { syntax: "<length>"; inherits: true; initial-value: 10px; }
+@property --fs-xs { syntax: "<length>"; inherits: true; initial-value: 11px; }
+@property --fs-sm { syntax: "<length>"; inherits: true; initial-value: 12px; }
+@property --fs-md { syntax: "<length>"; inherits: true; initial-value: 13px; }
+@property --fs-lg { syntax: "<length>"; inherits: true; initial-value: 14px; }
+@property --fs-xl { syntax: "<length>"; inherits: true; initial-value: 16px; }
+@property --fs-2xl { syntax: "<length>"; inherits: true; initial-value: 20px; }
+@property --fs-display { syntax: "<length>"; inherits: true; initial-value: 30px; }
+
+:root {
+  --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif;
+  --font-serif: "Martina Plantijn", "Iowan Old Style", Georgia, serif;
+  --font-mono: ui-monospace, "Cascadia Code", Consolas, monospace;
+  --font-scale: 1;
+  --fs-2xs: calc(10px * var(--font-scale));
+  --fs-xs: calc(11px * var(--font-scale));
+  --fs-sm: calc(12px * var(--font-scale));
+  --fs-md: calc(13px * var(--font-scale));
+  --fs-lg: calc(14px * var(--font-scale));
+  --fs-xl: calc(16px * var(--font-scale));
+  --fs-2xl: calc(20px * var(--font-scale));
+  --fs-display: calc(30px * var(--font-scale));
+  --fw-medium: 600;
+
+  --sp-px: 2px;
+  --sp-1: 4px;
+  --sp-2: 6px;
+  --sp-3: 8px;
+  --sp-4: 10px;
+  --sp-5: 12px;
+  --sp-6: 16px;
+  --sp-7: 20px;
+  --sp-8: 24px;
+  --sp-10: 32px;
+  --sp-12: 40px;
+
+  --r-xs: 4px;
+  --r-sm: 6px;
+  --r-md: 8px;
+  --r-lg: 10px;
+  --r-xl: 14px;
+  --r-2xl: 18px;
+  --r-pill: 999px;
+  --r-window: 10px;
+
+  --control-xs: 22px;
+  --control-sm: 26px;
+  --control-md: 28px;
+  --control-lg: 32px;
+
+  --titlebar-h: 28px;
+  --sidebar-w: 280px;
+  --sidebar-w-collapsed: 56px;
+  --card-top: calc(var(--titlebar-h) + var(--sp-2));
+  --content-max: 760px;
+  --chat-max: 680px;
+  --hero-wash-max-w: 960px;
+
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-spring: cubic-bezier(0.32, 0.72, 0, 1);
+  --t-fast: 100ms;
+  --t-med: 160ms;
+
+  /* Comply Paper — light theme */
+  --background: color-mix(in oklch, oklch(97% 0.008 85), var(--brand-wash) 4%);
+  --foreground: oklch(22% 0.01 85);
+  --card: color-mix(in oklch, oklch(100% 0 none), var(--brand-wash) 2%);
+  --card-foreground: oklch(22% 0.01 85);
+  --popover: var(--card);
+  --popover-foreground: var(--card-foreground);
+  --muted: color-mix(in oklch, oklch(94% 0.01 85), var(--brand-wash) 5%);
+  --muted-foreground: oklch(55% 0.015 85);
+  --accent: color-mix(in oklch, oklch(96% 0.01 85), var(--brand-wash) 4%);
+  --accent-foreground: oklch(22% 0.01 85);
+  --border: color-mix(in oklch, oklch(88% 0.01 85), var(--brand-wash) 6%);
+  --border-subtle: color-mix(in oklch, var(--border) 55%, transparent);
+  --input: var(--border);
+  --ring: oklch(75% 0.02 85);
+  --ring-focus: color-mix(in oklch, var(--foreground) 18%, transparent);
+  --focus-ring: oklch(60% 0.03 85 / 22%);
+
+  --sidebar: color-mix(in oklch, oklch(96% 0.008 85), var(--brand-wash) 6%);
+  --sidebar-foreground: oklch(22% 0.01 85);
+  --sidebar-accent: color-mix(in oklch, oklch(93% 0.01 85), var(--brand-wash) 6%);
+  --sidebar-border: color-mix(in oklch, oklch(86% 0.01 85), var(--brand-wash) 6%);
+
+  --surface-subtle: color-mix(in oklch, var(--muted) 65%, transparent);
+  --destructive: oklch(55% 0.15 30);
+  --destructive-soft: oklch(95% 0.025 30);
+  --success: oklch(48% 0.12 150);
+  --warning: oklch(70% 0.14 65);
+
+  /* Comply brand — sage = compliant, clay = overdue, ocean = CIPC */
+  --brand: #3f812f;
+  --brand-wash: #5a7c56;
+  --brand-bright: color-mix(in oklch, var(--brand) 72%, white);
+  --brand-tint: color-mix(in oklch, var(--brand) 10%, var(--card));
+  --brand-line: color-mix(in oklch, var(--brand) 14%, var(--card));
+
+  /* Primary action: deep pine like Clovy, but warmer */
+  --primary: var(--brand);
+  --primary-foreground: white;
+  --on-solid: white;
+
+  --hero-wash: color-mix(in oklch, var(--brand) 8%, transparent);
+  --hero-wash-soft: color-mix(in oklch, var(--brand-wash) 4%, transparent);
+
+  --selection: oklch(93% 0.01 85);
+  --selection-foreground: var(--foreground);
+  --scrim: color-mix(in oklch, var(--foreground) 10%, transparent);
+
+  --shadow-sm: 0 1px 2px oklch(24% 0.02 85 / 6%), 0 2px 4px oklch(24% 0.02 85 / 4%);
+  --shadow-md: 0 4px 12px oklch(24% 0.02 85 / 6%), 0 12px 32px oklch(24% 0.02 85 / 8%);
+  --shadow-lg: 0 8px 24px oklch(24% 0.02 85 / 10%), 0 20px 50px oklch(24% 0.02 85 / 12%);
+
+  transition: --brand 220ms var(--ease-out);
+}
+
+[data-theme="dark"] {
+  color-scheme: dark;
+  --background: color-mix(in oklch, oklch(16% 0.01 85), var(--brand-wash) 7%);
+  --foreground: oklch(96% 0.01 85);
+  --card: color-mix(in oklch, oklch(20% 0.01 85), var(--brand-wash) 7%);
+  --card-foreground: oklch(96% 0.01 85);
+  --popover: var(--card);
+  --popover-foreground: var(--card-foreground);
+  --muted: color-mix(in oklch, oklch(26% 0.01 85), var(--brand-wash) 7%);
+  --muted-foreground: oklch(68% 0.01 85);
+  --accent: color-mix(in oklch, oklch(26% 0.01 85), var(--brand-wash) 7%);
+  --accent-foreground: oklch(96% 0.01 85);
+  --border: oklch(28% 0.01 85);
+  --border-subtle: oklch(1 0 0 / 9%);
+  --input: oklch(28% 0.01 85);
+  --ring: oklch(1 0 0 / 16%);
+  --sidebar: color-mix(in oklch, oklch(14% 0.01 85), var(--brand-wash) 7%);
+  --sidebar-foreground: oklch(96% 0.01 85);
+  --sidebar-accent: color-mix(in oklch, oklch(22% 0.01 85), var(--brand-wash) 7%);
+  --sidebar-border: oklch(1 0 0 / 7%);
+  --surface-subtle: oklch(1 0 0 / 6%);
+  --selection: oklch(30% 0.01 85 / 50%);
+  --selection-foreground: var(--foreground);
+  --scrim: oklch(0% 0 none / 55%);
+  --shadow-sm: 0 1px 3px oklch(0% 0 none / 30%);
+  --shadow-md: 0 8px 30px oklch(0% 0 none / 35%);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root { transition: none; }
+}
