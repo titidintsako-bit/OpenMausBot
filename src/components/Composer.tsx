@@ -157,13 +157,13 @@ export function Composer({
   };
 
   return (
-    <div className="px-5 pb-5 pt-2">
+    <div className="px-5 pb-5 pt-3">
       {speechError && (
-        <div className="mx-auto mb-2 max-w-[900px] rounded-lg border border-warning/30 bg-warning/10 px-3 py-2 text-[12px] text-warning">
+        <div className="mx-auto mb-2 max-w-[680px] rounded-lg border border-warning/30 bg-warning/10 px-3 py-2 text-[12px] text-warning">
           {speechError}
         </div>
       )}
-      <div className="relative mx-auto max-w-[900px]">
+      <div className="relative mx-auto max-w-[680px]">
         {queued && (
           <div className="mb-2 flex items-center gap-2 rounded-lg border border-hairline/40 bg-panel px-3 py-2 text-[12.5px] text-ink-secondary">
             <Clock size={13} className="shrink-0" />
@@ -204,7 +204,7 @@ export function Composer({
             ))}
           </div>
         )}
-        <div className="flex items-end gap-2 rounded-3xl border border-hairline/40 bg-raised/60 py-2 pl-3 pr-2">
+        <div className="flex items-end gap-2 rounded-2xl border border-border bg-card py-2 pl-3 pr-2 shadow-sm">
         <textarea
           ref={inputRef}
           rows={1}

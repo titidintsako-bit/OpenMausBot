@@ -564,11 +564,12 @@ export function Sidebar() {
       <div className="px-3 pb-3 pt-2">
         <button
           onClick={() => dispatch({ type: "toggleRag", open: true })}
-          className="flex w-full items-center gap-3 rounded-xl px-3 py-2 text-left hover:bg-raised/50"
+          className="flex w-full items-center gap-3 rounded-xl px-3 py-2 text-left hover:bg-accent"
+          title="Company files — indexed locally, agents cite them automatically"
         >
-          <Database size={20} className="text-accent" />
-          <span className="text-[14px] text-ink">Knowledge</span>
-          <span className="ml-auto rounded-full bg-accent/15 px-2 py-0.5 text-[10px] font-medium tracking-widest text-accent">NEW</span>
+          <Database size={18} className="text-muted-foreground" />
+          <span className="text-[13px] text-foreground">Company files</span>
+          <span className="ml-auto text-[11px] text-muted-foreground">{/* auto-RAG badge hidden — ingestion is admin */}</span>
         </button>
         <button
           onClick={() => dispatch({ type: "togglePlugins", open: true })}

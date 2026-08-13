@@ -21,6 +21,7 @@ import { stateForBot } from "@/lib/mascot";
 import { ChatMarkdown } from "./ChatMarkdown";
 import { OptionCard } from "./OptionCard";
 import { Composer } from "./Composer";
+import { EmptyState } from "./EmptyState";
 import { ModelPicker } from "./ModelPicker";
 import { ReactionBar, ReactionChips } from "./Reactions";
 import { cn } from "@/lib/cn";
@@ -270,8 +271,8 @@ function Bubble({
         {user && <CopyButton text={text} />}
         <div
           className={cn(
-            "max-w-[70%] rounded-2xl px-4 py-2.5 text-[15px] leading-relaxed",
-            user ? "whitespace-pre-wrap bg-bubble-user text-ink" : "bg-card text-ink",
+            "max-w-[70%] rounded-2xl px-4 py-2.5 text-[14px] leading-relaxed shadow-sm",
+            user ? "whitespace-pre-wrap bg-foreground text-card" : "bg-card text-foreground border border-border-subtle",
           )}
           title={new Date(message.at).toLocaleString()}
         >
@@ -604,49 +605,43 @@ export function ChatView({ bot }: { bot: Bot }) {
   const noDrag = isWin ? ({ WebkitAppRegion: "no-drag" } as React.CSSProperties) : undefined;
 
   return (
-    <main className="relative flex h-full min-w-0 flex-1 flex-col bg-app">
-      {/* Header */}
-      <div
-        className={cn("flex items-center justify-between px-5 py-3", isWin && "pr-[148px]")}
-        style={drag}
-      >
+    <main className="relative flex h-full min-w-0 flex-1 flex-col bg-card">
+      {/* Header — June's detail-bar lives in App shell, this is the bot meta row */}
+      <div className={cn("flex items-center justify-between border-b border-border-subtle px-5 py-2.5", isWin && "pr-[148px]")} style={drag}>
         <button
           onClick={() => dispatch({ type: "toggleSettings" })}
-          className="flex items-center gap-2.5 rounded-lg px-1.5 py-1 hover:bg-raised/50"
+          className="flex items-center gap-2.5 rounded-full border border-border bg-card px-2 py-1 pr-3 hover:bg-accent"
           title="Bot settings"
           style={noDrag}
         >
           <MausAvatar
             color={bot.color}
             state={stateForBot({ ...bot, messages })}
-            size={28}
+            size={22}
             motion={mascotMotion?.kind ?? "none"}
             motionKey={mascotMotion?.nonce ?? 0}
           />
-          <span className="text-[15px] font-semibold text-ink">{bot.name}</span>
-          {bot.busy && <Loader2 size={14} className="animate-spin text-ink-secondary" />}
+          <span className="text-[13px] font-medium text-foreground">{bot.name}</span>
+          {bot.busy && <Loader2 size={12} className="animate-spin text-muted-foreground" />}
         </button>
-        <div className="flex items-center gap-2" style={noDrag}>
+        <div className="flex items-center gap-1.5" style={noDrag}>
           {bot.busy && (
             <button
               onClick={() => dispatch({ type: "interrupt", botId: bot.id })}
-              className="flex items-center gap-1.5 rounded-full border border-hairline/40 bg-raised/60 px-2.5 py-1 text-[13px] text-ink-secondary hover:bg-raised hover:text-ink"
+              className="flex items-center gap-1 rounded-full border border-border bg-card px-2.5 py-1 text-[12px] text-muted-foreground hover:bg-accent"
               title="Stop this turn"
             >
-              <Square size={12} className="fill-current" />
+              <Square size={11} className="fill-current" />
               Stop
             </button>
           )}
           <ModelPicker bot={bot} />
           <button
             onClick={() => dispatch({ type: "toggleComputer" })}
-            className={cn(
-              "rounded-md p-1.5 hover:bg-raised",
-              state.computerOpen ? "text-accent" : "text-ink-secondary hover:text-ink",
-            )}
+            className={cn("rounded-md p-1.5 hover:bg-accent", state.computerOpen ? "text-primary" : "text-muted-foreground hover:text-foreground")}
             title="Bot's computer"
           >
-            <Monitor size={18} />
+            <Monitor size={16} />
           </button>
         </div>
       </div>
@@ -660,88 +655,87 @@ export function ChatView({ bot }: { bot: Bot }) {
         </div>
       )}
 
-      {/* Messages */}
-      <div
-        ref={scrollRef}
-        className="flex-1 overflow-y-auto px-5 [overflow-anchor:none]"
-        onWheel={(e) => {
-          if (e.deltaY < 0) setFollow(false);
-          else if (atEnd()) setFollow(true);
-        }}
-        onTouchStart={(e) => (touchY.current = e.touches[0]?.clientY ?? 0)}
-        onTouchMove={(e) => {
-          const y = e.touches[0]?.clientY ?? 0;
-          if (y > touchY.current + 4) setFollow(false);
-          else if (atEnd()) setFollow(true);
-        }}
-        onScroll={() => {
-          if (!follow && atEnd()) setFollow(true);
-        }}
-      >
+      {/* Messages — hero when empty, otherwise thread */}
+      {messages.length === 0 && !bot.busy && !streaming && !reasoning ? (
+        <EmptyState botName={bot.name} onPrompt={(t) => dispatch({ type: "send", botId: bot.id, text: t })} />
+      ) : (
         <div
-          className="mx-auto flex max-w-[900px] flex-col gap-3 pb-4"
-          role="log"
-          aria-live="polite"
-          aria-label={`Conversation with ${bot.name}`}
+          ref={scrollRef}
+          className="flex-1 overflow-y-auto px-5 [overflow-anchor:none]"
+          onWheel={(e) => {
+            if (e.deltaY < 0) setFollow(false);
+            else if (atEnd()) setFollow(true);
+          }}
+          onTouchStart={(e) => (touchY.current = e.touches[0]?.clientY ?? 0)}
+          onTouchMove={(e) => {
+            const y = e.touches[0]?.clientY ?? 0;
+            if (y > touchY.current + 4) setFollow(false);
+            else if (atEnd()) setFollow(true);
+          }}
+          onScroll={() => {
+            if (!follow && atEnd()) setFollow(true);
+          }}
         >
-          <MessagesList
-            bot={bot}
-            messages={messages}
-            editingId={editingId}
-            lastBotTextId={lastBotTextId}
-            canRetryLast={!bot.busy && Boolean(lastUserMessage)}
-            onStartEdit={startEdit}
-            onCancelEdit={cancelEdit}
-            onSubmitEdit={submitEdit}
-            onRegenerate={regenerate}
-          />
-          {provisioning && (
-            <div className="flex justify-start">
-              <div className="flex items-center gap-2 rounded-full border border-hairline/40 bg-panel px-3 py-1.5 text-[13px] text-ink-secondary">
-                <Loader2 size={13} className="animate-spin" />
-                Setting up this bot's computer…
-              </div>
-            </div>
-          )}
-          {reasoning && bot.busy && <ThinkingStrip text={reasoning} active={!streaming} />}
-          {streaming ? (
-            <StreamingBubble text={streaming} />
-          ) : (
-            bot.busy && (
+          <div className="mx-auto flex max-w-[900px] flex-col gap-3 pb-4 pt-4" role="log" aria-live="polite" aria-label={`Conversation with ${bot.name}`}>
+            <MessagesList
+              bot={bot}
+              messages={messages}
+              editingId={editingId}
+              lastBotTextId={lastBotTextId}
+              canRetryLast={!bot.busy && Boolean(lastUserMessage)}
+              onStartEdit={startEdit}
+              onCancelEdit={cancelEdit}
+              onSubmitEdit={submitEdit}
+              onRegenerate={regenerate}
+            />
+            {provisioning && (
               <div className="flex justify-start">
-                <div className="flex items-center gap-2.5 rounded-2xl bg-raised px-4 py-3">
-                  <span className="flex items-center gap-1.5">
-                    <span className="size-1.5 animate-bounce rounded-full bg-ink-secondary [animation-delay:0ms]" />
-                    <span className="size-1.5 animate-bounce rounded-full bg-ink-secondary [animation-delay:150ms]" />
-                    <span className="size-1.5 animate-bounce rounded-full bg-ink-secondary [animation-delay:300ms]" />
-                  </span>
-                  <WorkingTimer since={lastUserMessage?.at ?? Date.now()} />
+                <div className="flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1.5 text-[13px] text-muted-foreground shadow-sm">
+                  <Loader2 size={13} className="animate-spin" />
+                  Setting up this bot's computer…
                 </div>
               </div>
-            )
-          )}
+            )}
+            {reasoning && bot.busy && <ThinkingStrip text={reasoning} active={!streaming} />}
+            {streaming ? (
+              <StreamingBubble text={streaming} />
+            ) : (
+              bot.busy && (
+                <div className="flex justify-start">
+                  <div className="flex items-center gap-2.5 rounded-2xl border border-border bg-card px-4 py-3 shadow-sm">
+                    <span className="flex items-center gap-1.5">
+                      <span className="size-1.5 animate-bounce rounded-full bg-muted-foreground [animation-delay:0ms]" />
+                      <span className="size-1.5 animate-bounce rounded-full bg-muted-foreground [animation-delay:150ms]" />
+                      <span className="size-1.5 animate-bounce rounded-full bg-muted-foreground [animation-delay:300ms]" />
+                    </span>
+                    <WorkingTimer since={lastUserMessage?.at ?? Date.now()} />
+                  </div>
+                </div>
+              )
+            )}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Reading scrollback — one tap back to the end, streaming or not */}
-      {!follow && (
+      {!(messages.length === 0 && !bot.busy && !streaming && !reasoning) && !follow && (
         <button
           onClick={jumpToLatest}
           aria-label="Jump to latest messages"
-          className="animate-pop-in absolute bottom-24 left-1/2 z-10 flex -translate-x-1/2 items-center gap-1.5 rounded-full border border-hairline/40 bg-raised px-3 py-1.5 text-[12.5px] text-ink shadow-lg hover:bg-raised-hover"
+          className="animate-pop-in absolute bottom-24 left-1/2 z-10 flex -translate-x-1/2 items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1.5 text-[12.5px] text-foreground shadow-lg hover:bg-accent"
         >
           <ArrowDown size={13} /> Jump to latest
         </button>
       )}
 
-      {/* keyed by bot: a draft belongs to the conversation it was typed in,
-          so switching bots starts from an empty composer instead of carrying
-          the previous bot's half-written message over */}
-      <Composer
-        key={bot.id}
-        bot={bot}
-        onEditLast={lastUserMessage ? () => setEditingId(lastUserMessage.id) : undefined}
-      />
+      {/* Composer — hidden in hero state (hero has its own), otherwise bottom */}
+      {!(messages.length === 0 && !bot.busy && !streaming && !reasoning) && (
+        <Composer
+          key={bot.id}
+          bot={bot}
+          onEditLast={lastUserMessage ? () => setEditingId(lastUserMessage.id) : undefined}
+        />
+      )}
 
     </main>
   );
