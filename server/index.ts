@@ -20,7 +20,7 @@ import * as rag from "./rag/index.ts";
 import * as consultations from "./consultations.ts";
 import { mentionedBots, Store, type Message } from "./store.ts";
 import { BrowserUseDriver } from "./drivers/browser-use/index.ts";
-import { DocumentsDriver } from "./mcp/documents/index.ts";
+import { generateDocx, generatePdfLetterhead, generatePptx, generateXlsx } from "./mcp/documents/index.ts";
 
 const PORT = Number(process.env.OMB_PORT || process.env.OGB_PORT || 8799);
 const STATIC_DIR = process.env.OMB_STATIC_DIR || null;
@@ -665,15 +665,25 @@ function json(res: ServerResponse, status: number, body: unknown) {
 function readBody(req: IncomingMessage): Promise<any> {
   return new Promise((resolve, reject) => {
     let data = "";
+    let rejected = false;
     req.on("data", (c) => {
+      if (rejected) return;
       data += c;
-      if (data.length > 1_000_000) reject(new Error("body too large"));
+      if (data.length > 1_000_000) {
+        rejected = true;
+        const e: any = new Error("body too large");
+        e.status = 413;
+        reject(e);
+      }
     });
     req.on("end", () => {
+      if (rejected) return;
       try {
         resolve(data ? JSON.parse(data) : {});
       } catch {
-        reject(new Error("invalid JSON body"));
+        const e: any = new Error("invalid JSON body");
+        e.status = 400;
+        reject(e);
       }
     });
     req.on("error", reject);
@@ -1229,34 +1239,36 @@ const server = createServer(async (req, res) => {
       const body = await readBody(req);
       const title = String(body.title ?? "");
       const content = String(body.content ?? "");
-      const ok = (DocumentsDriver as any).generatePdfLetterhead(title, content);
-      // DocumentsDriver functions return { ok, dataUrl?, error? } but the harness
-      // expects a plain object; we normalise here.
-      return json(res, 200, { ok });
+      if (title.length > 500 || content.length > 100_000) return json(res, 413, { ok: false, error: "payload too large" });
+      const result = await generatePdfLetterhead(title, content);
+      return json(res, result.ok ? 200 : 500, result);
     }
     m = path.match(/^\/api\/documents\/docx-template$/);
     if (m && method === "POST") {
       const body = await readBody(req);
       const title = String(body.title ?? "");
       const sections = Array.isArray(body.sections) ? body.sections : [];
-      const ok = (DocumentsDriver as any).generateDocx(title, sections);
-      return json(res, 200, { ok });
+      if (sections.length > 200) return json(res, 413, { ok: false, error: "too many sections" });
+      const result = await generateDocx(title, sections);
+      return json(res, result.ok ? 200 : 500, result);
     }
     m = path.match(/^\/api\/documents\/pptx-template$/);
     if (m && method === "POST") {
       const body = await readBody(req);
       const title = String(body.title ?? "");
       const slides = Array.isArray(body.slides) ? body.slides : [];
-      const ok = (DocumentsDriver as any).generatePptx(title, slides);
-      return json(res, 200, { ok });
+      if (slides.length > 100) return json(res, 413, { ok: false, error: "too many slides" });
+      const result = await generatePptx(title, slides);
+      return json(res, result.ok ? 200 : 500, result);
     }
     m = path.match(/^\/api\/documents\/xlsx-report$/);
     if (m && method === "POST") {
       const body = await readBody(req);
       const title = String(body.title ?? "");
       const rows = Array.isArray(body.rows) ? body.rows : [];
-      const ok = (DocumentsDriver as any).generateXlsx(title, rows);
-      return json(res, 200, { ok });
+      if (rows.length > 5000) return json(res, 413, { ok: false, error: "too many rows" });
+      const result = await generateXlsx(title, rows);
+      return json(res, result.ok ? 200 : 500, result);
     }
 
     // packaged app: the server serves the built UI too (window → :8799 for

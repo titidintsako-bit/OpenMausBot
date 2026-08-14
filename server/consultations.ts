@@ -1,5 +1,6 @@
 import { mkdirSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
+import Groq, { toFile } from "groq-sdk";
 import { DATA_DIR } from "./config.ts";
 import { ingestText } from "./rag/index.ts";
 
@@ -64,25 +65,39 @@ export function saveWav(id: string, buf: Buffer): string {
 export async function transcribeAndIndex(id: string, audioBuf: Buffer) {
   const c = getConsultation(id);
   if (!c) return;
-  // Groq Whisper placeholder — real transcription via Groq API when GROQ_API_KEY is set
   try {
-    // Simulate API call delay
-    await new Promise((r) => setTimeout(r, 500));
-    const mockText = `Transcribed consultation audio (${audioBuf.length} bytes)`;
-    c.transcript = mockText;
-    // naive notes generation: first 2 sentences as summary placeholder
-    c.notes = mockText.slice(0, 800) + (mockText.length > 800 ? "…" : "");
+    let text: string;
+    const key = process.env.GROQ_API_KEY?.trim();
+    if (key) {
+      const groq = new Groq({ apiKey: key });
+      // groq-sdk expects a File-like; toFile wraps Buffer correctly for Node
+      const file = await toFile(audioBuf, `${id}.wav`, { type: "audio/wav" });
+      const res: any = await groq.audio.transcriptions.create({
+        file,
+        model: "whisper-large-v3",
+        // response_format: "verbose_json" returns {text, ...}; omit for default json
+        temperature: 0,
+      });
+      text = typeof res === "string" ? res : (res?.text ?? String(res ?? ""));
+      if (!text.trim()) text = "[No speech detected]";
+    } else {
+      await new Promise((r) => setTimeout(r, 500));
+      text = `Transcribed consultation audio (${audioBuf.length} bytes) [mock — set GROQ_API_KEY]`;
+    }
+    c.transcript = text;
+    c.notes = text.slice(0, 800) + (text.length > 800 ? "…" : "");
+    // estimate duration: assume 16kHz mono 16-bit PCM ~32kB/s after 44B header
+    if (!c.durationMs && audioBuf.length > 44) c.durationMs = Math.round(((audioBuf.length - 44) / 32000) * 1000);
+    if (!c.wavPath) c.wavPath = join(DATA_DIR, "consultations", `${id}.wav`);
     saveConsultation(c);
-    // ingest into RAG for auto-citations
     const source = `Consultation-${c.title.replace(/\W+/g, "_")}.txt`;
     try {
-      await ingestText(`Consultation ${c.title} (${new Date(c.createdAt).toLocaleDateString()}):\n${mockText}`, source);
+      await ingestText(`Consultation ${c.title} (${new Date(c.createdAt).toLocaleDateString()}):\n${text}`, source);
     } catch {}
     return c;
   } catch (e) {
     console.error("Transcription error:", e);
-    // fallback: treat the audio buf as raw text placeholder
-    c.transcript = "[Transcription failed — manual transcript needed]";
+    c.transcript = `[Transcription failed: ${String((e as any)?.message ?? e)} — manual transcript needed]`;
     c.notes = "";
     saveConsultation(c);
     return c;

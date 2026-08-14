@@ -23,10 +23,10 @@ let serverProc = null;
 let serverReady = true;
 
 // The packaged app has no terminal: everything about the server child's life
-// goes to ~/Library/Logs/OpenMausBot/server.log (Console.app-visible), which
+// goes to app.getPath('logs')/server.log (Console.app-visible on mac), which
 // is also why stdio is piped, not inherited — under a Finder launch the
 // parent's stdio leads nowhere and a failed boot is otherwise undiagnosable.
-const LOG_DIR = path.join(app.getPath("home"), "Library", "Logs", "OpenMausBot");
+const LOG_DIR = app.getPath("logs");
 let logStream = null;
 function slog(line) {
   try {
