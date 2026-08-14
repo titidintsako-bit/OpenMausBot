@@ -48,6 +48,7 @@ async function startServerOn(port) {
       ...process.env,
       OMB_STATIC_DIR: path.join(process.resourcesPath, "ui"),
       OMB_PORT: String(port),
+      GROQ_API_KEY: process.env.GROQ_API_KEY ?? "",
     },
     stdio: ["ignore", "pipe", "pipe"],
   });
