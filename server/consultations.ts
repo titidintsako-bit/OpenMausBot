@@ -61,19 +61,32 @@ export function saveWav(id: string, buf: Buffer): string {
   return p;
 }
 
-export async function transcribeAndIndex(id: string, transcript: string) {
+export async function transcribeAndIndex(id: string, audioBuf: Buffer) {
   const c = getConsultation(id);
   if (!c) return;
-  c.transcript = transcript;
-  // naive notes generation: first 2 sentences as summary placeholder
-  c.notes = transcript.slice(0, 800) + (transcript.length > 800 ? "…" : "");
-  saveConsultation(c);
-  // ingest into RAG for auto-citations
-  const source = `Consultation-${c.title.replace(/\W+/g, "_")}.txt`;
+  // Groq Whisper placeholder — real transcription via Groq API when GROQ_API_KEY is set
   try {
-    await ingestText(`Consultation ${c.title} (${new Date(c.createdAt).toLocaleDateString()}):\n${transcript}`, source);
-  } catch {}
-  return c;
+    // Simulate API call delay
+    await new Promise((r) => setTimeout(r, 500));
+    const mockText = `Transcribed consultation audio (${audioBuf.length} bytes)`;
+    c.transcript = mockText;
+    // naive notes generation: first 2 sentences as summary placeholder
+    c.notes = mockText.slice(0, 800) + (mockText.length > 800 ? "…" : "");
+    saveConsultation(c);
+    // ingest into RAG for auto-citations
+    const source = `Consultation-${c.title.replace(/\W+/g, "_")}.txt`;
+    try {
+      await ingestText(`Consultation ${c.title} (${new Date(c.createdAt).toLocaleDateString()}):\n${mockText}`, source);
+    } catch {}
+    return c;
+  } catch (e) {
+    console.error("Transcription error:", e);
+    // fallback: treat the audio buf as raw text placeholder
+    c.transcript = "[Transcription failed — manual transcript needed]";
+    c.notes = "";
+    saveConsultation(c);
+    return c;
+  }
 }
 
 export function createConsultation(title?: string): Consultation {

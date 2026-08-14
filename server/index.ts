@@ -1144,12 +1144,23 @@ const server = createServer(async (req, res) => {
     m = path.match(/^\/api\/consultations\/([\w_]+)\/transcript$/);
     if (m && method === "PUT") {
       const body = await readBody(req);
-      const transcript = String(body.transcript ?? "");
-      if (!transcript.trim()) return json(res, 400, { error: "transcript required" });
-      const c = await consultations.transcribeAndIndex(m[1], transcript);
+      const audioBase64 = String(body.audioBase64 ?? "");
+      const buf = Buffer.from(audioBase64, "base64");
+      const c = await consultations.transcribeAndIndex(m[1], buf);
       if (!c) return json(res, 404, { error: "not found" });
       broadcast({ kind: "consultation", item: c });
       return json(res, 200, { item: c });
+    }
+    m = path.match(/^\/api\/consultations\/([\w_]+)\/wav$/);
+    if (m && method === "POST") {
+      const body = await readBody(req);
+      const buf = Buffer.from(body.audioBase64 ?? "", "base64");
+      const p = consultations.saveWav(m[1], buf);
+      // trigger transcription
+      const c = await consultations.transcribeAndIndex(m[1], buf);
+      if (!c) return json(res, 404, { error: "not found" });
+      broadcast({ kind: "consultation", item: c });
+      return json(res, 200, { item: c, wavPath: p });
     }
 
     // ── the bot's cloud computer (Box) ──
