@@ -20,6 +20,7 @@ import * as rag from "./rag/index.ts";
 import * as consultations from "./consultations.ts";
 import { mentionedBots, Store, type Message } from "./store.ts";
 import { BrowserUseDriver } from "./drivers/browser-use/index.ts";
+import { DocumentsDriver } from "./mcp/documents/index.ts";
 
 const PORT = Number(process.env.OMB_PORT || process.env.OGB_PORT || 8799);
 const STATIC_DIR = process.env.OMB_STATIC_DIR || null;
@@ -1220,6 +1221,42 @@ const server = createServer(async (req, res) => {
       const domain = String((new URL(req.url ?? "")).searchParams.get("domain") ?? "");
       const allowed = (BrowserUseDriver as any).allowedPortal(domain);
       return json(res, 200, { allowed });
+    }
+
+    // ── documents (Phase 6: ComplyOS document generation) ───────────────────
+    m = path.match(/^\/api\/documents\/pdf-letterhead$/);
+    if (m && method === "POST") {
+      const body = await readBody(req);
+      const title = String(body.title ?? "");
+      const content = String(body.content ?? "");
+      const ok = (DocumentsDriver as any).generatePdfLetterhead(title, content);
+      // DocumentsDriver functions return { ok, dataUrl?, error? } but the harness
+      // expects a plain object; we normalise here.
+      return json(res, 200, { ok });
+    }
+    m = path.match(/^\/api\/documents\/docx-template$/);
+    if (m && method === "POST") {
+      const body = await readBody(req);
+      const title = String(body.title ?? "");
+      const sections = Array.isArray(body.sections) ? body.sections : [];
+      const ok = (DocumentsDriver as any).generateDocx(title, sections);
+      return json(res, 200, { ok });
+    }
+    m = path.match(/^\/api\/documents\/pptx-template$/);
+    if (m && method === "POST") {
+      const body = await readBody(req);
+      const title = String(body.title ?? "");
+      const slides = Array.isArray(body.slides) ? body.slides : [];
+      const ok = (DocumentsDriver as any).generatePptx(title, slides);
+      return json(res, 200, { ok });
+    }
+    m = path.match(/^\/api\/documents\/xlsx-report$/);
+    if (m && method === "POST") {
+      const body = await readBody(req);
+      const title = String(body.title ?? "");
+      const rows = Array.isArray(body.rows) ? body.rows : [];
+      const ok = (DocumentsDriver as any).generateXlsx(title, rows);
+      return json(res, 200, { ok });
     }
 
     // packaged app: the server serves the built UI too (window → :8799 for
